@@ -1,12 +1,22 @@
 rm(list=ls())
 
+
 # load packages
 library(tidyverse)
 library(rstan)
+rstan_options(auto_write = TRUE)
 library(loo)
 library(patchwork)
 library(lubridate)
-source("/Users/kellyloria/Desktop/Kelly/stan/stan_utility.R")
+
+# if stan is struggling try this:
+#remove.packages(c("StanHeaders", "rstan"))
+#install.packages("StanHeaders", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+#install.packages("rstan", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+
+library(StanHeaders)
+
+source("/Users/kellyloria/Desktop/Kelly/stan_utility.R")
 
 # memory.limit(size = 50000)
 
@@ -24,9 +34,9 @@ data <- read_rdump(paste("/Users/kellyloria/Desktop/Kelly/Alder/Modelinputs3M/",
 data$temp_ref <- 20
 
 model <- "o2_model_inhibition.stan" #Steele 2 param inhibition
-model_path <- paste0("/Users/kellyloria/Desktop/Kelly/Alder/stan/",model)
+model_path <- paste0("/Users/kellyloria/Desktop/Kelly/stan/",model)
 
-chains <- 3 # was 6
+chains <- 4 # was 6
 iter <-500 #was 1000
 warmup <- 100 #was 1000
 adapt_delta <- 0.80
@@ -55,7 +65,7 @@ check_treedepth(stanfit,max_treedepth)
 check_energy(stanfit)
 
 # export path
-output_path <- paste0("modelAlder3M/output/")
+output_path <- paste0("/Users/kellyloria/Desktop/Kelly/Alder/output")
 # save model full output
 saveRDS(stanfit, paste0(output_path,"/",lake,"_fit.rds"))
 
@@ -70,7 +80,7 @@ fit_clean <- fit_summary %>%
 
 
 # data
-sonde_data <- read_csv(paste0("D:/IADO/UNR/NoahPPR/Alder/Modelinputs3M/sonde_prep_castle_2015_2019.csv"))
+sonde_data <- read_csv(paste0("/Users/kellyloria/Desktop/Kelly/Alder/Modelinputs3M/sonde_prep_castle_2015_2019.csv"))
 
 out <- fit_clean %>%
   filter(name %in% c("GPP","ER","NEP")) %>%
@@ -125,7 +135,8 @@ p1 <- fit_clean %>%
   theme_bw() +
   labs(y="Mean Estimated Value",color="year",x="Day of Year")
 p1
-ggsave(plot = p1,filename = paste("D:/IADO/UNR/NoahPPR/modelAlder3M/graphics/castle_2015_2019.png",sep=""),width=11,height=8.5,dpi=300)
+
+#ggsave(plot = p1,filename = paste("D:/IADO/UNR/NoahPPR/modelAlder3M/graphics/castle_2015_2019.png",sep=""),width=11,height=8.5,dpi=300)
 
 #plot time series of estimates
 p2 <- ggplot(data = out %>% drop_na(year),aes(yday, middle, color = name))+
@@ -141,4 +152,4 @@ p2 <- ggplot(data = out %>% drop_na(year),aes(yday, middle, color = name))+
   facet_wrap(vars(year))
 p2
 
-ggsave(plot = p2,filename = paste("D:/IADO/UNR/NoahPPR/modelAlder3M/graphics/castle_2015_2019_metabolism.png",sep=""),width=11,height=8.5,dpi=300)
+#ggsave(plot = p2,filename = paste("D:/IADO/UNR/NoahPPR/modelAlder3M/graphics/castle_2015_2019_metabolism.png",sep=""),width=11,height=8.5,dpi=300)
